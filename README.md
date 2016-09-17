@@ -8,15 +8,16 @@ This is a project to create a predictive dialler using node and mongoDB.
 - Workflow
 - Full API
 - Call recording
-- Conferancing
+- Conferencing
 - Call backs and reminders
 - Campaign management
 - Custom entities and fields
 - Multi-language / currency
 - Import / export tools
-- Customisable reporting
+- Customizable reporting
 - KPI dashboard
 - Task management
+- Scaleable (supports load balancing)
 
 
 ### Prerequisites
@@ -46,6 +47,7 @@ This is a project to create a predictive dialler using node and mongoDB.
 *   To stop the local process
     `$ killall node`
 
+
 Testing & Debugging
 ----------
 
@@ -57,6 +59,10 @@ Mocha (https://mochajs.org) is a test framework running on Node.js making asynch
 ### Logging
 
 Winston (https://github.com/winstonjs/winston) is used for logging.
+
+### Load balancing
+There is an interesting article here:
+https://www.keithcirkel.co.uk/load-balancing-node-js/
 
 ### Nodemon
 
@@ -138,6 +144,11 @@ sudo n 0.8.20
 ### How do I update node components?
 sudo npm update npm -g
 
+Useful links
+---------
+http://realfavicongenerator.net/
+http://fa2png.io/
+http://html2jade.org/
 
 License
 -------

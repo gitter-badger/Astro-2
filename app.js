@@ -1,17 +1,17 @@
 /**
  * Module dependencies.
  */
-
- var d = new Date().toLocaleString()
-//console.log(d + ' - %s', chalk.green('loading module dependencies...'));
+'use strict';
 
 const express = require('express');
+const winston = require('winston');
+const dateformat = require('dateformat');
 const compression = require('compression');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const logger = require('morgan');
+//const logger = require('morgan');
 const chalk = require('chalk');
-const errorHandler = require('errorhandler');
+//const errorHandler = require('errorhandler');
 const lusca = require('lusca');
 const dotenv = require('dotenv');
 const MongoStore = require('connect-mongo')(session);
@@ -23,6 +23,57 @@ const expressValidator = require('express-validator');
 const sass = require('node-sass-middleware');
 const multer = require('multer');
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
+
+/**
+ * Setup logging
+ */
+const fs = require('fs');
+const env = process.env.NODE_ENV || 'development';
+const logDir = 'logs';
+// Create the log directory if it does not exist
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
+const tsFormat = () => (new Date()).toLocaleTimeString();
+const logger = new (winston.Logger)({
+  transports: [
+    // colorize the output to the console
+    new (winston.transports.Console)({
+      timestamp: tsFormat,
+      colorize: true,
+      level: 'debug',
+      silent: false
+    }),
+    new (require('winston-daily-rotate-file'))({
+      filename: `${logDir}/-log.log`,
+      timestamp: tsFormat,
+      datePattern: 'yyyy-MM-dd',
+      prepend: true,
+      level: env === 'development' ? 'verbose' : 'info'
+    })
+  ],
+  exceptionHandlers: [
+    new (winston.transports.Console)({
+      timestamp: tsFormat,
+      colorize: true,
+      exitOnError: false,
+      handleExceptions: true,
+      humanReadableUnhandledException: true
+    }),
+    new (require('winston-daily-rotate-file'))({
+      filename: `${logDir}/-error.log`,
+      timestamp: tsFormat,
+      datePattern: 'yyyy-MM-dd',
+      prepend: true,
+      exitOnError: false,
+      handleExceptions: true,
+      humanReadableUnhandledException: true
+    })
+  ]
+});
+
+logger.info('app.js starting...');
+logger.debug('Debugging info');
 
 /**
  * Load environment variables from .env file, where API keys and passwords are configured.
@@ -42,6 +93,7 @@ const contactController = require('./controllers/contact');
  */
 const passportConfig = require('./config/passport');
 
+
 /**
  * Create Express server.
  */
@@ -50,16 +102,14 @@ const app = express();
 /**
  * Connect to MongoDB.
  */
-
-
-console.log('connecting to %s', process.env.MONGODB_URI || process.env.MONGOLAB_URI);
+logger.info('connecting to %s', process.env.MONGODB_URI || process.env.MONGOLAB_URI);
 
 mongoose.connect(process.env.MONGODB_URI || process.env.MONGOLAB_URI);
 mongoose.connection.on('connected', () => {
-  console.log('%s MongoDB connection established!', chalk.green('✓'));
+  logger.info('%s MongoDB connection established!', chalk.green('✓'));
 });
 mongoose.connection.on('error', () => {
-  console.log('%s MongoDB connection error. Please make sure MongoDB is running.', chalk.red('✗'));
+  logger.info('%s MongoDB connection error. Please make sure MongoDB is running.', chalk.red('✗'));
   process.exit();
 });
 
@@ -74,7 +124,7 @@ app.use(sass({
   src: path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public')
 }));
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());
@@ -221,13 +271,33 @@ app.get('/auth/pinterest/callback', passport.authorize('pinterest', { failureRed
 /**
  * Error Handler.
  */
-app.use(errorHandler());
+//app.use(errorHandler());
+
+
+/**
+ * Setup local variables
+ */
+app.locals.applicationName = 'Astro';
+app.locals.supportemail = 'support@astro.com';
+
+const baconController = require('./controllers/bacon');
+
+app.get("/foo*", baconController.getStaticPage);
+//app.get("/foo", baconController.getbacon);
+app.get("/build", baconController.getBuildStaticPages);
 
 /**
  * Start Express server.
  */
-app.listen(app.get('port'), () => {
-  console.log('%s Express server listening on port %d in %s mode.', chalk.green('✓'), app.get('port'), app.get('env'));
-});
+ app.listen(app.get('port'), function() {
+  logger.info('%s Express server listening on port %d in %s mode.', chalk.green('✓'), app.get('port'), app.get('env'));
+ }).on('error', function(err) {
+   if (err.errno === 'EADDRINUSE') {
+     logger.error('%s port %s busy', chalk.red('✗'), app.get('port'));
+   }
+   else {
+     console.log(err);
+    }
+ });
 
 module.exports = app;

@@ -20,8 +20,6 @@ pids
 /bower_components
 /builtAssets
 /node_modules
-/public
-
 
 # Editors
 .idea
