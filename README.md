@@ -1,6 +1,8 @@
 Astro
 =============
 
+[![Join the chat at https://gitter.im/Astro-JS/Lobby](https://badges.gitter.im/Astro-JS/Lobby.svg)](https://gitter.im/Astro-JS/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This is a project to create a predictive dialler using node and mongoDB.  
 
 ### Features
